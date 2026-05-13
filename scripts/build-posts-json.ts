@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, readdirSync } from 'fs'
+import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
 import { join, basename } from 'path'
 import matter from 'gray-matter'
 
@@ -169,5 +169,6 @@ const output: PostsJson = {
   buildTime: getBuildTime(),
 }
 
+mkdirSync(join(process.cwd(), 'public'), { recursive: true })
 writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8')
 console.log(`✓ posts.json 產出完成（${allPosts.length} 筆，${dates.length} 天）`)
