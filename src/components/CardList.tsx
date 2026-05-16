@@ -14,7 +14,7 @@ export default function CardList({ posts, onSelect }: CardListProps) {
   return (
     <div className="card-list">
       {posts.map(p => (
-        <Card key={`${p.date}-${p.author}`} post={p} onSelect={onSelect} />
+        <Card key={`${p.date}-${p.author}-${p.source}`} post={p} onSelect={onSelect} />
       ))}
     </div>
   )
