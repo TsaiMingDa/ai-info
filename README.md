@@ -1,10 +1,10 @@
 # Dev Daily Digest
 
-每日自動蒐集三位 Claude Code 核心開發者的貼文，由 Claude 以繁體中文改寫並解釋與前端工程師工作的關聯，部署為個人 GitHub Pages 網站。
+每日自動蒐集 Claude Code 生態圈五個來源的內容，由 Claude 以繁體中文改寫並解釋與前端工程師工作的關聯，部署為個人 GitHub Pages 網站。
 
 ## 功能
 
-- 每天 Asia/Taipei 02:00 自動抓取三個來源
+- 每天 Asia/Taipei 02:00 自動抓取五個來源
 - Claude 產生：繁中改寫、核心概念說明、前端工程師應用建議
 - PR 工作流：每天收到 PR → 閱讀 → Merge → 自動部署
 - 網站支援日期篩選、作者篩選、點擊展開詳細內容
@@ -16,12 +16,14 @@
 | boris_cherny | Threads | TypeScript / 開發工具 |
 | trq212 (Thariq Shihipar) | Thread Reader App | Anthropic 工程師，Claude Code 核心開發者 |
 | claudeai | Anthropic Blog | Claude 官方公告與功能更新 |
+| claudeai | Threads | Claude 官方 Threads 帳號即時動態 |
+| Claude Code | Changelog | Claude Code 版本更新紀錄 |
 
 ## 技術架構
 
 ```
 Claude Code Remote Routine (每日 02:00 Asia/Taipei)
-  → 瀏覽三來源 → 產生 posts/YYYY-MM-DD.md → 開 PR
+  → 瀏覽五來源 → 產生 posts/YYYY-MM-DD.md → 開 PR
     → 你 review & merge
       → GitHub Actions: build:json + vite build → GitHub Pages
 ```

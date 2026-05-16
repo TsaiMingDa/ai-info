@@ -4,6 +4,7 @@ const AUTHOR_ICON: Record<string, string> = {
   boris_cherny: '🧵',
   trq212: '🐦',
   claudeai: '🤖',
+  claude_code: '📋',
 }
 
 interface CardProps {
@@ -38,7 +39,10 @@ export default function Card({ post, onSelect }: CardProps) {
     )
   }
 
-  const preview = post.rewriteZh.split('\n').slice(0, 2).join(' ')
+  const isChangelog = post.type === 'changelog'
+  const preview = isChangelog
+    ? (post.changes ?? '').split('\n').slice(0, 2).join(' ')
+    : (post.rewriteZh ?? '').split('\n').slice(0, 2).join(' ')
 
   return (
     <article className="card" onClick={() => onSelect(post)} role="button" tabIndex={0}
@@ -48,18 +52,24 @@ export default function Card({ post, onSelect }: CardProps) {
         <span className="card-author-name">{post.author}</span>
         <span className="card-source">{post.source}</span>
         <span className="card-date">{post.date}</span>
+        {post.isSnippet && <span className="card-badge--snippet">摘要</span>}
       </div>
+      {isChangelog && post.version && (
+        <p className="card-version">{post.version}</p>
+      )}
       <p className="card-preview">{preview}</p>
       <div className="card-footer">
-        <a
-          className="card-link"
-          href={post.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={e => e.stopPropagation()}
-        >
-          原文 ↗
-        </a>
+        {!isChangelog && post.sourceUrl && (
+          <a
+            className="card-link"
+            href={post.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+          >
+            原文 ↗
+          </a>
+        )}
         <span className="card-expand">展開詳細 ▼</span>
       </div>
     </article>

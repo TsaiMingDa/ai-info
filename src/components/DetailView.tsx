@@ -18,24 +18,43 @@ export default function DetailView({ post, onClose }: DetailViewProps) {
           <span className="detail-date">{post.date}</span>
         </div>
 
-        <a
-          className="detail-url"
-          href={post.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {post.sourceUrl} ↗
-        </a>
-
-        <section className="detail-section">
-          <h3>原文</h3>
-          <blockquote className="detail-blockquote">{post.originalText}</blockquote>
-        </section>
-
-        <section className="detail-section">
-          <h3>繁中改寫</h3>
-          <p className="detail-text">{post.rewriteZh}</p>
-        </section>
+        {post.type === 'changelog' ? (
+          <>
+            {post.version && (
+              <p className="detail-version">{post.version}</p>
+            )}
+            <section className="detail-section">
+              <h3>變更項目</h3>
+              <div className="detail-markdown">
+                <ReactMarkdown>{post.changes ?? ''}</ReactMarkdown>
+              </div>
+            </section>
+          </>
+        ) : (
+          <>
+            {post.sourceUrl && (
+              <a
+                className="detail-url"
+                href={post.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {post.sourceUrl} ↗
+              </a>
+            )}
+            <section className="detail-section">
+              <h3>原文</h3>
+              {post.isSnippet && (
+                <p className="detail-snippet-warning">⚠️ 本則內容為搜尋摘要（snippet），非完整原文</p>
+              )}
+              <blockquote className="detail-blockquote">{post.originalText}</blockquote>
+            </section>
+            <section className="detail-section">
+              <h3>繁中改寫</h3>
+              <p className="detail-text">{post.rewriteZh}</p>
+            </section>
+          </>
+        )}
 
         <section className="detail-section">
           <h3>核心概念（簡單說）</h3>

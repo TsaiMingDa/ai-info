@@ -4,8 +4,8 @@
 
 ## What Changes
 
-- 新建一個 GitHub Pages 個人網站，展示每日彙整的開發者貼文
-- 建立 Claude Code Remote Routine 設定，每天定時抓取三個來源並產生當日 MD 檔
+- 新建一個 GitHub Pages 個人網站，展示每日彙整的開發者貼文與 Changelog
+- 建立 Claude Code Remote Routine 設定，每天定時抓取五個來源並產生當日 MD 檔（WebSearch + WebFetch 兩階段策略，WebFetch 失敗時 fallback 到 snippet 並標註）
 - 採用 PR 工作流：Routine 不直接 push main，改開 PR 給使用者每日 review 後 merge（學習儀式）
 - 建立 GitHub Actions workflow，於 merge 後將 MD 轉成 JSON 並 build & deploy 到 GitHub Pages
 - 使用 Fine-grained PAT 限定單一 repo + Contents 讀寫 + 90 天過期，存於 Routine secret config
@@ -14,7 +14,7 @@
 ## Capabilities
 
 ### New Capabilities
-- `content-ingestion`: 每日從三個公開來源（threads.com、threadreaderapp.com、anthropic.com/news）抓取貼文，由 Claude 整理為標準化的 daily MD 檔案，並透過 PR 流程提交至 repo
+- `content-ingestion`: 每日從五個公開來源（threads.com/@boris_cherny、threadreaderapp.com/user/trq212、anthropic.com/news、threads.com/@claudeai、code.claude.com/docs/changelog）抓取貼文與版本更新，由 Claude 整理為標準化的 daily MD 檔案，並透過 PR 流程提交至 repo
 - `digest-site`: React + Vite 靜態網站，從 build 階段產生的 posts.json 讀取資料，提供日期導航、作者篩選、卡片列表與點擊展開詳細內容的瀏覽體驗
 - `deployment-pipeline`: GitHub Actions workflow，在 PR merge 至 main 後將所有 posts/*.md 轉換為 posts.json、build React app 並部署至 GitHub Pages
 

@@ -1,19 +1,7 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs'
 import { join, basename } from 'path'
 import matter from 'gray-matter'
-
-interface Post {
-  date: string
-  author: string
-  source: string
-  sourceUrl: string
-  originalText: string
-  rewriteZh: string
-  coreExplanation: string
-  frontendApplication: string
-  isEmpty: boolean
-  isFailed: boolean
-}
+import type { Post, PostType } from '../src/types'
 
 interface PostsJson {
   posts: Post[]
@@ -22,13 +10,22 @@ interface PostsJson {
   buildTime: string
 }
 
-const AUTHOR_CONFIGS = [
-  { key: 'boris_cherny', heading: 'boris_cherny · Threads', source: 'Threads' },
-  { key: 'trq212', heading: 'trq212 (Thariq) · Thread Reader App', source: 'Thread Reader App' },
-  { key: 'claudeai', heading: 'claudeai · Anthropic Blog', source: 'Anthropic Blog' },
+interface AuthorConfig {
+  key: string
+  heading: string
+  source: string
+  type: PostType
+}
+
+const AUTHOR_CONFIGS: AuthorConfig[] = [
+  { key: 'boris_cherny', heading: 'boris_cherny · Threads', source: 'Threads', type: 'post' },
+  { key: 'trq212', heading: 'trq212 (Thariq) · Thread Reader App', source: 'Thread Reader App', type: 'post' },
+  { key: 'claudeai', heading: 'claudeai · Anthropic Blog', source: 'Anthropic Blog', type: 'post' },
+  { key: 'claudeai', heading: 'claudeai · Threads', source: 'Threads', type: 'post' },
+  { key: 'claude_code', heading: 'Claude Code · Changelog', source: 'Changelog', type: 'changelog' },
 ]
 
-const FIELD_PATTERNS: Array<{ key: keyof Omit<Post, 'date' | 'author' | 'source' | 'isEmpty' | 'isFailed'>; label: string }> = [
+const POST_FIELD_PATTERNS: Array<{ key: string; label: string }> = [
   { key: 'sourceUrl', label: '**原文網址：**' },
   { key: 'originalText', label: '**原文：**' },
   { key: 'rewriteZh', label: '**繁中改寫：**' },
@@ -36,11 +33,19 @@ const FIELD_PATTERNS: Array<{ key: keyof Omit<Post, 'date' | 'author' | 'source'
   { key: 'frontendApplication', label: '**前端工程師實際應用：**' },
 ]
 
+const CHANGELOG_FIELD_PATTERNS: Array<{ key: string; label: string }> = [
+  { key: 'version', label: '**版本號 / 日期：**' },
+  { key: 'changes', label: '**變更項目：**' },
+  { key: 'coreExplanation', label: '**核心概念（簡單說）：**' },
+  { key: 'frontendApplication', label: '**前端工程師實際應用：**' },
+]
+
+const SNIPPET_MARKER = '⚠️ 本則內容為搜尋摘要'
+
 function extractField(sectionLines: string[], label: string, nextLabel?: string): string {
   const startIdx = sectionLines.findIndex(l => l.trim().startsWith(label))
   if (startIdx === -1) return ''
 
-  // Content on the same line after the label (e.g. **原文網址：** https://...)
   const inline = sectionLines[startIdx].trim().slice(label.length).trim()
 
   let endIdx = sectionLines.length
@@ -56,18 +61,18 @@ function extractField(sectionLines: string[], label: string, nextLabel?: string)
   return [inline, ...subsequent].filter(l => l.length > 0).join('\n').trim()
 }
 
-function parseSection(sectionLines: string[], date: string, author: string, source: string): Post {
+function parsePostSection(sectionLines: string[], date: string, author: string, source: string): Post {
   const isEmpty = sectionLines.some(l => l.includes('（今日無更新）'))
   const isFailed = sectionLines.some(l => l.includes('（今日抓取失敗'))
 
   if (isEmpty || isFailed) {
-    return { date, author, source, sourceUrl: '', originalText: '', rewriteZh: '', coreExplanation: '', frontendApplication: '', isEmpty, isFailed }
+    return { type: 'post', date, author, source, isSnippet: false, sourceUrl: '', originalText: '', rewriteZh: '', coreExplanation: '', frontendApplication: '', isEmpty, isFailed }
   }
 
-  const fields: Partial<Post> = {}
-  for (let i = 0; i < FIELD_PATTERNS.length; i++) {
-    const { key, label } = FIELD_PATTERNS[i]
-    const nextLabel = FIELD_PATTERNS[i + 1]?.label
+  const fields: Record<string, string> = {}
+  for (let i = 0; i < POST_FIELD_PATTERNS.length; i++) {
+    const { key, label } = POST_FIELD_PATTERNS[i]
+    const nextLabel = POST_FIELD_PATTERNS[i + 1]?.label
     fields[key] = extractField(sectionLines, label, nextLabel)
   }
 
@@ -75,13 +80,52 @@ function parseSection(sectionLines: string[], date: string, author: string, sour
     throw new Error(`[${date}][${author}] 缺少 **原文網址：** 欄位`)
   }
 
+  const isSnippet = fields.originalText?.includes(SNIPPET_MARKER) ?? false
+  const cleanedOriginalText = fields.originalText
+    ?.split('\n')
+    .filter(l => !l.includes(SNIPPET_MARKER))
+    .join('\n')
+    .trim() ?? ''
+
   return {
+    type: 'post',
     date,
     author,
     source,
-    sourceUrl: fields.sourceUrl ?? '',
-    originalText: fields.originalText ?? '',
+    isSnippet,
+    sourceUrl: fields.sourceUrl,
+    originalText: cleanedOriginalText,
     rewriteZh: fields.rewriteZh ?? '',
+    coreExplanation: fields.coreExplanation ?? '',
+    frontendApplication: fields.frontendApplication ?? '',
+    isEmpty: false,
+    isFailed: false,
+  }
+}
+
+function parseChangelogSection(sectionLines: string[], date: string, author: string, source: string): Post {
+  const isEmpty = sectionLines.some(l => l.includes('（今日無更新）'))
+  const isFailed = sectionLines.some(l => l.includes('（今日抓取失敗'))
+
+  if (isEmpty || isFailed) {
+    return { type: 'changelog', date, author, source, isSnippet: false, version: '', changes: '', coreExplanation: '', frontendApplication: '', isEmpty, isFailed }
+  }
+
+  const fields: Record<string, string> = {}
+  for (let i = 0; i < CHANGELOG_FIELD_PATTERNS.length; i++) {
+    const { key, label } = CHANGELOG_FIELD_PATTERNS[i]
+    const nextLabel = CHANGELOG_FIELD_PATTERNS[i + 1]?.label
+    fields[key] = extractField(sectionLines, label, nextLabel)
+  }
+
+  return {
+    type: 'changelog',
+    date,
+    author,
+    source,
+    isSnippet: false,
+    version: fields.version ?? '',
+    changes: fields.changes ?? '',
     coreExplanation: fields.coreExplanation ?? '',
     frontendApplication: fields.frontendApplication ?? '',
     isEmpty: false,
@@ -121,7 +165,11 @@ function parseFile(filePath: string): Post[] {
     const sectionEnd = nextHeadingLine === -1 ? lines.length : nextHeadingLine
     const sectionLines = lines.slice(headingLine + 1, sectionEnd)
 
-    posts.push(parseSection(sectionLines, date, config.key, config.source))
+    const post = config.type === 'changelog'
+      ? parseChangelogSection(sectionLines, date, config.key, config.source)
+      : parsePostSection(sectionLines, date, config.key, config.source)
+
+    posts.push(post)
   }
 
   return posts
@@ -160,7 +208,7 @@ for (const file of mdFiles) {
 }
 
 const dates = [...new Set(allPosts.map(p => p.date))].sort().reverse()
-const authors = ['boris_cherny', 'trq212', 'claudeai']
+const authors = ['boris_cherny', 'trq212', 'claudeai', 'claude_code']
 
 const output: PostsJson = {
   posts: allPosts,

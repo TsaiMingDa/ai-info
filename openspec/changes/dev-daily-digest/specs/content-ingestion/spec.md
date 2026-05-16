@@ -1,11 +1,13 @@
 ## ADDED Requirements
 
-### Requirement: 每日定時抓取三來源
-系統 SHALL 每天於設定的固定時間（透過 Claude Code Remote Routine 的 cron schedule）執行一次抓取流程，依序處理三個來源：`https://www.threads.com/@boris_cherny`、`https://threadreaderapp.com/user/trq212`、`https://www.anthropic.com/news`。
+### Requirement: 每日定時抓取五來源
+系統 SHALL 每天於設定的固定時間（透過 Claude Code Remote Routine 的 cron schedule）執行一次抓取流程，依序處理五個來源：`https://www.threads.com/@boris_cherny`、`https://threadreaderapp.com/user/trq212`、`https://www.anthropic.com/news`、`https://www.threads.com/@claudeai`、`https://code.claude.com/docs/en/changelog`。
 
-#### Scenario: 三來源皆有當日新內容
+抓取策略採兩階段流程：**WebSearch 探索**（找出今日內容的 URL 與摘要）→ **WebFetch 取得完整內容**（若失敗則 fallback 到 snippet，並在 MD 內標註 `⚠️ 本則內容為搜尋摘要（snippet），非完整原文`）。
+
+#### Scenario: 五來源皆有當日新內容
 - **WHEN** Routine 於排程時間觸發
-- **THEN** 系統依序瀏覽三個來源 URL，擷取當日（依台北時區）的新貼文，並彙整為單一 daily MD 檔案
+- **THEN** 系統依序處理五個來源，擷取當日（依台北時區）的新貼文/更新，並彙整為單一 daily MD 檔案
 
 #### Scenario: 部分來源無當日新內容
 - **WHEN** Routine 執行時，某來源無當日新貼文
@@ -23,11 +25,15 @@
 - **THEN** 檔案包含：
   - YAML frontmatter，至少含 `date: YYYY-MM-DD`
   - 一級標題 `# YYYY-MM-DD 每日精選`
-  - 三個二級標題 section，依序為 `## boris_cherny · Threads`、`## trq212 (Thariq) · Thread Reader App`、`## claudeai · Anthropic Blog`
+  - 五個二級標題 section，依序為 `## boris_cherny · Threads`、`## trq212 (Thariq) · Thread Reader App`、`## claudeai · Anthropic Blog`、`## claudeai · Threads`、`## Claude Code · Changelog`
 
-#### Scenario: 每個來源 section 內含的欄位
-- **WHEN** 某來源該日有貼文內容
-- **THEN** 該 section 包含五個粗體標籤欄位，依序為：`**原文網址：**`（可點擊 URL）、`**原文：**`（blockquote 引用原文）、`**繁中改寫：**`（繁體中文台灣用語改寫，保留技術術語原文）、`**核心概念（簡單說）：**`（一段易懂但不失專業深度的說明）、`**前端工程師實際應用：**`（含跟工作關聯、具體場景、本週可嘗試行動三項要點）
+#### Scenario: 一般貼文來源 section 內含的欄位
+- **WHEN** 某貼文來源（boris_cherny / trq212 / claudeai）該日有貼文內容
+- **THEN** 該 section 包含五個粗體標籤欄位，依序為：`**原文網址：**`（可點擊 URL）、`**原文：**`（blockquote 引用原文；若為 snippet 則末尾附 `⚠️` 標註）、`**繁中改寫：**`（繁體中文台灣用語改寫，保留技術術語原文）、`**核心概念（簡單說）：**`（一段易懂但不失專業深度的說明）、`**前端工程師實際應用：**`（含跟工作關聯、具體場景、本週可嘗試行動三項要點）
+
+#### Scenario: Changelog section 內含的欄位
+- **WHEN** Claude Code Changelog 有當日版本更新
+- **THEN** 該 section 包含四個粗體標籤欄位：`**版本號 / 日期：**`（版本號與日期）、`**變更項目：**`（條列變更內容，保留英文原文加繁中說明）、`**核心概念（簡單說）：**`、`**前端工程師實際應用：**`
 
 #### Scenario: 同來源同日多則貼文
 - **WHEN** 某來源該日有多則貼文

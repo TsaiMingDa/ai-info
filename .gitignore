@@ -70,3 +70,9 @@ public/posts.json
 # Claude Code local settings
 .claude/settings.local.json
 .claude
+
+# Routine prompt (local only, not tracked)
+routine/
+
+# Windows crash dumps
+bash.exe.stackdump

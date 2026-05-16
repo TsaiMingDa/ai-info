@@ -4,6 +4,7 @@ const AUTHOR_LABELS: Record<string, string> = {
   boris_cherny: 'boris_cherny',
   trq212: 'trq212',
   claudeai: 'claudeai',
+  claude_code: 'Claude Code',
 }
 
 interface FiltersProps {

@@ -16,13 +16,14 @@
 - [x] 2.5 解析失敗時 throw error 終止 build（讓 deploy workflow 失敗、保留前一版網站）
 - [x] 2.6 在 `package.json` 加入 `npm run build:json` 與整合進 `npm run build`（先 build:json 再 vite build）
 - [x] 2.7 用 sample MD 檔驗證腳本，產出 `public/posts.json` 結構正確
+- [x] 2.8 更新 AUTHOR_CONFIGS 至五來源，新增 Changelog 解析分支與 isSnippet 偵測（⚠️ snippet 標記自動剝離並設 isSnippet: true）
 
 ## 3. 前端應用實作
 
 - [x] 3.1 規劃元件結構：`App` / `Header`（含最後更新時間）/ `Filters`（日期 + 作者）/ `CardList` / `Card` / `DetailView`
 - [x] 3.2 在 `App` 載入時 fetch `posts.json`，處理 loading 與錯誤狀態
 - [x] 3.3 實作日期篩選：下拉或日曆 picker，僅顯示有資料的日期；含「上一日／下一日」按鈕，邊界時 disabled
-- [x] 3.4 實作作者篩選：標籤式按鈕 `[全部] [boris_cherny] [trq212] [claudeai]`，與日期篩選取交集
+- [x] 3.4 實作作者篩選：標籤式按鈕 `[全部] [boris_cherny] [trq212] [claudeai] [Claude Code]`，與日期篩選取交集
 - [x] 3.5 實作卡片列表：作者、來源、日期、改寫摘要前 1-2 行、原文外連按鈕
 - [x] 3.6 實作詳細內容檢視（決定 modal 或 inline expand），含原文 blockquote、繁中改寫、核心概念、前端應用三段；支援 Esc 與背景點擊關閉
 - [x] 3.7 加入 footer 顯示 `buildTime` 的「最後更新」資訊
@@ -35,14 +36,14 @@
 - [x] 4.1 建立 `.github/workflows/deploy.yml`，trigger 為 `push: branches: [main]` 與 `workflow_dispatch`
 - [x] 4.2 設定 permissions：`contents: read`、`pages: write`、`id-token: write`
 - [x] 4.3 Steps：checkout → setup-node (LTS) → `npm ci` → `npm run build` → `actions/upload-pages-artifact` (path: `dist/`) → `actions/deploy-pages`
-- [ ] 4.4 在 GitHub repo Settings → Pages 啟用 GitHub Actions 作為部署來源
+- [x] 4.4 在 GitHub repo Settings → Pages 啟用 GitHub Actions 作為部署來源
 - [ ] 4.5 push 一個 dummy MD 變更，驗證 workflow 跑成功且網站可訪問
 
 ## 5. Routine 設定與文件
 
 - [x] 5.1 撰寫 `routine/README.md`，說明 cron schedule、所需 env 變數名稱、PAT 設定步驟（不含實際 PAT 值）
 - [x] 5.2 撰寫 `routine/prompt.md` 範本，內容描述：每日工作流程、來源 URL 清單、MD 格式要求、找不到貼文時的處理（標記「（今日無更新）」）、抓取失敗時的處理、PR branch 命名 (`digest/YYYY-MM-DD`)、commit message 格式 (`digest: YYYY-MM-DD`)、PR 標題格式 (`每日精選 YYYY-MM-DD`)
-- [ ] 5.3 使用者依文件建立 Fine-grained PAT：限定該 repo + `Contents: Read and write` + `Pull requests: Read and write` + 90 天過期
+- [x] 5.3 使用者依文件建立 Fine-grained PAT：限定該 repo + `Contents: Read and write` + `Pull requests: Read and write` + 90 天過期
 - [ ] 5.4 使用者於 Claude Code 建立 scheduled remote routine，設 cron 為 1.1 確認的時間，掛上 prompt 範本與 PAT secret
 - [ ] 5.5 手動觸發一次 routine，驗證可成功 push branch + 開 PR
 

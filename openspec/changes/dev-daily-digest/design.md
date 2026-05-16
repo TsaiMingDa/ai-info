@@ -12,7 +12,7 @@
 ## Goals / Non-Goals
 
 **Goals:**
-- 每日固定時間自動蒐集三個來源最新貼文
+- 每日固定時間自動蒐集五個來源最新內容（貼文 + Changelog）
 - 由 Claude 產生標準化的繁中改寫 + 核心解釋 + 前端應用建議
 - 透過 PR 流程讓使用者每日 review，達成學習目的
 - Merge 後自動部署到 GitHub Pages
@@ -57,14 +57,15 @@
 - PR + 24h 自動 merge：避免休假斷更，但初期先不做以免增加複雜度
 - PR + Claude auto-review：多一層 QA 但使用者選擇不加
 
-### Decision 3：MD 一天一檔，section 切分三來源
+### Decision 3：MD 一天一檔，section 切分五來源
 
-**選擇：** `posts/YYYY-MM-DD.md` 一個檔案，內部用 `## boris_cherny ...`、`## trq212 ...`、`## claudeai ...` section 區分。
+**選擇：** `posts/YYYY-MM-DD.md` 一個檔案，內部用 `## boris_cherny ...`、`## trq212 ...`、`## claudeai · Anthropic Blog`、`## claudeai · Threads`、`## Claude Code · Changelog` section 區分。
 
 **為什麼：**
 - 使用者明確要求一天一檔
 - 一檔包含全天內容，PR review 時一次看完最自然
 - Frontmatter 只記 `date`，作者資訊由 section heading 表達，前端解析時拆 section 即可
+- claudeai 兩個來源（Blog 與 Threads）共用 `author='claudeai'`，靠 `source` 欄位區分
 
 **替代方案：** 一貼文一檔（`posts/2026-05-10/boris.md`）。檔案數爆炸、PR diff 變散，且使用者明確不要這樣。
 
@@ -110,15 +111,22 @@
 ```
 {
   "posts": [
-    { "date": "2026-05-10", "author": "boris_cherny", "source": "Threads",
+    { "type": "post", "date": "2026-05-10", "author": "boris_cherny", "source": "Threads",
+      "isSnippet": false,
       "sourceUrl": "...", "originalText": "...", "rewriteZh": "...",
+      "coreExplanation": "...", "frontendApplication": "..." },
+    { "type": "changelog", "date": "2026-05-10", "author": "claude_code", "source": "Changelog",
+      "isSnippet": false,
+      "version": "1.2.0 / 2026-05-10", "changes": "...",
       "coreExplanation": "...", "frontendApplication": "..." },
     ...
   ],
   "dates": ["2026-05-10", ...],
-  "authors": ["boris_cherny", "trq212", "claudeai"]
+  "authors": ["boris_cherny", "trq212", "claudeai", "claude_code"]
 }
 ```
+
+`type` 欄位（`'post' | 'changelog'`）讓前端依類型切換渲染邏輯；`isSnippet` 標記 WebSearch fallback 的 snippet 內容。
 
 **為什麼：** 前端篩選邏輯最直觀（filter by date / author），不需巢狀解析。
 
