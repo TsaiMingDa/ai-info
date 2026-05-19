@@ -1,10 +1,10 @@
 ## ADDED Requirements
 
-### Requirement: PR merge 觸發部署
-系統 SHALL 在 PR merge 至 main branch 時自動觸發部署流程。
+### Requirement: main push 觸發部署
+系統 SHALL 在 main branch 收到 push 時自動觸發部署流程。
 
-#### Scenario: PR merge 後自動跑
-- **WHEN** 任何 PR merge 至 main branch
+#### Scenario: 直接 push 後自動跑
+- **WHEN** main branch 收到任何 push（包含 Local Routine 自動 commit 或人工 commit）
 - **THEN** GitHub Actions workflow 自動觸發，依序執行：解析 MD → 產 JSON → build React app → 部署 GitHub Pages
 
 #### Scenario: 非內容相關的 push 不重複部署
@@ -46,7 +46,7 @@
 系統 SHALL 同時支援自動與手動觸發 workflow。
 
 #### Scenario: 自動觸發
-- **WHEN** main branch 有新的 commit（PR merge）
+- **WHEN** main branch 有新的 commit（routine 自動 push 或人工 push）
 - **THEN** workflow 自動執行
 
 #### Scenario: 手動觸發
