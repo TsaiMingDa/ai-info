@@ -15,7 +15,23 @@ export default function DetailView({ post, onClose }: DetailViewProps) {
         <div className="detail-header">
           <span className="detail-author">{post.author}</span>
           <span className="detail-source">{post.source}</span>
-          <span className="detail-date">{post.date}</span>
+        </div>
+
+        <div className="detail-meta-bar">
+          <span className="detail-meta-date">{post.date}</span>
+          {post.sourceUrl && (
+            <>
+              <span className="detail-meta-sep">·</span>
+              <a
+                className="detail-meta-url"
+                href={post.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {post.sourceUrl} ↗
+              </a>
+            </>
+          )}
         </div>
 
         {post.type === 'changelog' ? (
@@ -32,16 +48,6 @@ export default function DetailView({ post, onClose }: DetailViewProps) {
           </>
         ) : (
           <>
-            {post.sourceUrl && (
-              <a
-                className="detail-url"
-                href={post.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {post.sourceUrl} ↗
-              </a>
-            )}
             <section className="detail-section">
               <h3>原文</h3>
               {post.isSnippet && (
