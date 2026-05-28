@@ -72,7 +72,7 @@ public/posts.json
 .claude
 
 # Routine prompt (local only, not tracked)
-routine/
+# routine/
 
 # Windows crash dumps
 bash.exe.stackdump
