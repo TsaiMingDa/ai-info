@@ -18,9 +18,16 @@ interface AuthorConfig {
 }
 
 const AUTHOR_CONFIGS: AuthorConfig[] = [
+  // X（新來源，取代 Threads）
+  { key: 'boris_cherny', heading: 'boris_cherny · X', source: 'X', type: 'post' },
+  // 舊 Threads heading — 保留向下相容（解析既有 post 檔案）
   { key: 'boris_cherny', heading: 'boris_cherny · Threads', source: 'Threads', type: 'post' },
+  { key: 'trq212', heading: 'trq212 · X', source: 'X', type: 'post' },
   { key: 'trq212', heading: 'trq212 (Thariq) · Thread Reader App', source: 'Thread Reader App', type: 'post' },
   { key: 'claudeai', heading: 'claudeai · Anthropic Blog', source: 'Anthropic Blog', type: 'post' },
+  // X（新來源，取代 Threads）
+  { key: 'claudeai', heading: 'claudeai · X', source: 'X', type: 'post' },
+  // 舊 Threads heading — 保留向下相容
   { key: 'claudeai', heading: 'claudeai · Threads', source: 'Threads', type: 'post' },
   { key: 'claude_code', heading: 'Claude Code · Changelog', source: 'Changelog', type: 'changelog' },
 ]
@@ -41,6 +48,35 @@ const CHANGELOG_FIELD_PATTERNS: Array<{ key: string; label: string }> = [
 ]
 
 const SNIPPET_MARKER = '⚠️ 本則內容為搜尋摘要'
+
+function splitByHorizontalRule(sectionLines: string[]): string[][] {
+  if (
+    sectionLines.some(l => l.includes('（今日無更新）')) ||
+    sectionLines.some(l => l.includes('（今日抓取失敗'))
+  ) {
+    return [sectionLines]
+  }
+
+  const entries: string[][] = []
+  let current: string[] = []
+
+  for (const line of sectionLines) {
+    if (line.trim() === '---') {
+      if (current.some(l => l.trim().length > 0)) {
+        entries.push(current)
+      }
+      current = []
+    } else {
+      current.push(line)
+    }
+  }
+
+  if (current.some(l => l.trim().length > 0)) {
+    entries.push(current)
+  }
+
+  return entries.length > 0 ? entries : [sectionLines]
+}
 
 function extractField(sectionLines: string[], label: string, nextLabel?: string): string {
   const startIdx = sectionLines.findIndex(l => l.trim().startsWith(label))
@@ -77,7 +113,8 @@ function parsePostSection(sectionLines: string[], date: string, author: string, 
   }
 
   if (!fields.sourceUrl) {
-    throw new Error(`[${date}][${author}] 缺少 **原文網址：** 欄位`)
+    console.warn(`[${date}][${author}] 缺少 **原文網址：** 欄位，跳過此 sub-entry`)
+    return { type: 'post', date, author, source, isSnippet: false, sourceUrl: '', originalText: '', rewriteZh: '', coreExplanation: '', frontendApplication: '', isEmpty: false, isFailed: true }
   }
 
   const isSnippet = fields.originalText?.includes(SNIPPET_MARKER) ?? false
@@ -164,12 +201,14 @@ function parseFile(filePath: string): Post[] {
     )
     const sectionEnd = nextHeadingLine === -1 ? lines.length : nextHeadingLine
     const sectionLines = lines.slice(headingLine + 1, sectionEnd)
+    const subEntries = splitByHorizontalRule(sectionLines)
 
-    const post = config.type === 'changelog'
-      ? parseChangelogSection(sectionLines, date, config.key, config.source)
-      : parsePostSection(sectionLines, date, config.key, config.source)
-
-    posts.push(post)
+    for (const entry of subEntries) {
+      const post = config.type === 'changelog'
+        ? parseChangelogSection(entry, date, config.key, config.source)
+        : parsePostSection(entry, date, config.key, config.source)
+      posts.push(post)
+    }
   }
 
   return posts
