@@ -97,6 +97,13 @@ function extractField(sectionLines: string[], label: string, nextLabel?: string)
   return [inline, ...subsequent].filter(l => l.length > 0).join('\n').trim()
 }
 
+function normalizeSourceUrl(raw: string): string {
+  const trimmed = raw.trim()
+  if (!trimmed) return ''
+  const match = trimmed.match(/^\[.*?\]\((.+?)\)$/)
+  return match ? match[1].trim() : trimmed
+}
+
 function parsePostSection(sectionLines: string[], date: string, author: string, source: string): Post {
   const isEmpty = sectionLines.some(l => l.includes('（今日無更新）'))
   const isFailed = sectionLines.some(l => l.includes('（今日抓取失敗'))
@@ -130,7 +137,7 @@ function parsePostSection(sectionLines: string[], date: string, author: string, 
     author,
     source,
     isSnippet,
-    sourceUrl: fields.sourceUrl,
+    sourceUrl: normalizeSourceUrl(fields.sourceUrl),
     originalText: cleanedOriginalText,
     rewriteZh: fields.rewriteZh ?? '',
     coreExplanation: fields.coreExplanation ?? '',
