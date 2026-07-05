@@ -76,3 +76,6 @@ public/posts.json
 
 # Windows crash dumps
 bash.exe.stackdump
+
+# Local UI prototypes (working files, not tracked)
+ui_prototype/
