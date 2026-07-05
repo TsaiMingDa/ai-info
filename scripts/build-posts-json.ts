@@ -78,16 +78,20 @@ function splitByHorizontalRule(sectionLines: string[]): string[][] {
   return entries.length > 0 ? entries : [sectionLines]
 }
 
-function extractField(sectionLines: string[], label: string, nextLabel?: string): string {
+function extractField(sectionLines: string[], label: string, nextLabels?: string[]): string {
   const startIdx = sectionLines.findIndex(l => l.trim().startsWith(label))
   if (startIdx === -1) return ''
 
   const inline = sectionLines[startIdx].trim().slice(label.length).trim()
 
   let endIdx = sectionLines.length
-  if (nextLabel) {
-    const next = sectionLines.findIndex((l, i) => i > startIdx && l.trim().startsWith(nextLabel))
-    if (next !== -1) endIdx = next
+  if (nextLabels && nextLabels.length > 0) {
+    for (let i = startIdx + 1; i < sectionLines.length; i++) {
+      if (nextLabels.some(nl => sectionLines[i].trim().startsWith(nl))) {
+        endIdx = i
+        break
+      }
+    }
   }
 
   const subsequent = sectionLines.slice(startIdx + 1, endIdx)
@@ -101,7 +105,14 @@ function normalizeSourceUrl(raw: string): string {
   const trimmed = raw.trim()
   if (!trimmed) return ''
   const match = trimmed.match(/^\[.*?\]\((.+?)\)$/)
-  return match ? match[1].trim() : trimmed
+  const url = match ? match[1].trim() : trimmed
+  try {
+    const { protocol } = new URL(url)
+    if (protocol !== 'http:' && protocol !== 'https:') return ''
+  } catch {
+    return ''
+  }
+  return url
 }
 
 function parsePostSection(sectionLines: string[], date: string, author: string, source: string): Post {
@@ -115,8 +126,8 @@ function parsePostSection(sectionLines: string[], date: string, author: string, 
   const fields: Record<string, string> = {}
   for (let i = 0; i < POST_FIELD_PATTERNS.length; i++) {
     const { key, label } = POST_FIELD_PATTERNS[i]
-    const nextLabel = POST_FIELD_PATTERNS[i + 1]?.label
-    fields[key] = extractField(sectionLines, label, nextLabel)
+    const nextLabels = POST_FIELD_PATTERNS.slice(i + 1).map(p => p.label)
+    fields[key] = extractField(sectionLines, label, nextLabels)
   }
 
   if (!fields.sourceUrl) {
@@ -158,8 +169,8 @@ function parseChangelogSection(sectionLines: string[], date: string, author: str
   const fields: Record<string, string> = {}
   for (let i = 0; i < CHANGELOG_FIELD_PATTERNS.length; i++) {
     const { key, label } = CHANGELOG_FIELD_PATTERNS[i]
-    const nextLabel = CHANGELOG_FIELD_PATTERNS[i + 1]?.label
-    fields[key] = extractField(sectionLines, label, nextLabel)
+    const nextLabels = CHANGELOG_FIELD_PATTERNS.slice(i + 1).map(p => p.label)
+    fields[key] = extractField(sectionLines, label, nextLabels)
   }
 
   return {
@@ -186,9 +197,9 @@ function parseFile(filePath: string): Post[] {
   if (!rawDate) {
     date = basename(filePath, '.md')
   } else if (rawDate instanceof Date) {
-    const y = rawDate.getFullYear()
-    const m = String(rawDate.getMonth() + 1).padStart(2, '0')
-    const d = String(rawDate.getDate()).padStart(2, '0')
+    const y = rawDate.getUTCFullYear()
+    const m = String(rawDate.getUTCMonth() + 1).padStart(2, '0')
+    const d = String(rawDate.getUTCDate()).padStart(2, '0')
     date = `${y}-${m}-${d}`
   } else {
     date = String(rawDate).substring(0, 10)
@@ -254,7 +265,7 @@ for (const file of mdFiles) {
 }
 
 const dates = [...new Set(allPosts.map(p => p.date))].sort().reverse()
-const authors = ['boris_cherny', 'trq212', 'claudeai', 'claude_code']
+const authors = [...new Set(AUTHOR_CONFIGS.map(c => c.key))]
 
 const output: PostsJson = {
   posts: allPosts,
