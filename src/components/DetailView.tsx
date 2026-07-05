@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import type { Post } from '../types'
 
@@ -7,10 +8,15 @@ interface DetailViewProps {
 }
 
 export default function DetailView({ post, onClose }: DetailViewProps) {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
   return (
     <div className="overlay" onClick={onClose} role="dialog" aria-modal>
       <div className="detail" onClick={e => e.stopPropagation()}>
-        <button className="detail-close" onClick={onClose} aria-label="關閉">✕</button>
+        <button className="detail-close" onClick={onClose} aria-label="關閉" autoFocus>✕</button>
 
         <div className="detail-header">
           <span className="detail-author">{post.author}</span>

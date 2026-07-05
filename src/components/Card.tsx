@@ -46,7 +46,7 @@ export default function Card({ post, onSelect }: CardProps) {
 
   return (
     <article className="card" onClick={() => onSelect(post)} role="button" tabIndex={0}
-      onKeyDown={e => e.key === 'Enter' && onSelect(post)}>
+      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onSelect(post)}>
       <div className="card-author">
         <span className="card-icon">{AUTHOR_ICON[post.author] ?? '📄'}</span>
         <span className="card-author-name">{post.author}</span>

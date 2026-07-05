@@ -16,17 +16,20 @@ export default function App() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     fetch(`${BASE}posts.json`)
       .then(r => {
         if (!r.ok) throw new Error('fetch failed')
         return r.json()
       })
       .then((d: PostsData) => {
+        if (cancelled) return
         setData(d)
         if (d.dates.length > 0) setSelectedDate(d.dates[0])
       })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false))
+      .catch(() => { if (!cancelled) setError(true) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
